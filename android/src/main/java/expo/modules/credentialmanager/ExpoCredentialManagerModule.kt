@@ -32,7 +32,9 @@ class ExpoCredentialManagerModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("ExpoCredentialManager")
 
-    AsyncFunction("getPasswordCredential") Coroutine { -> getPasswordCredential() }
+    AsyncFunction("getPasswordCredential") Coroutine { autoSelect: Boolean ->
+      getPasswordCredential(autoSelect)
+    }
 
     AsyncFunction("savePasswordCredential") Coroutine { id: String, password: String ->
       savePasswordCredential(id, password)
@@ -42,14 +44,15 @@ class ExpoCredentialManagerModule : Module() {
   private val currentActivity: Activity?
     get() = appContext.activityProvider?.currentActivity
 
-  private suspend fun getPasswordCredential(): Map<String, Any?> {
+  private suspend fun getPasswordCredential(autoSelect: Boolean): Map<String, Any?> {
     val activity = currentActivity ?: return status(STATUS_UNAVAILABLE)
-    // isAutoSelectAllowed is the only smoothing applied here: it skips the
-    // account picker when exactly one credential matches. prepareGetCredential
-    // and preferImmediatelyAvailableCredentials were both tried on a real
-    // device and suppressed the sheet entirely — do not reintroduce them.
+    // autoSelect is the caller's call, and defaults to false in JS: with it on,
+    // a single stored credential comes back with no sheet and no tap, so
+    // whoever holds the unlocked phone is signed in. prepareGetCredential and
+    // preferImmediatelyAvailableCredentials were both tried on a real device
+    // and suppressed the sheet entirely — do not reintroduce them.
     val request = GetCredentialRequest(
-      listOf(GetPasswordOption(isAutoSelectAllowed = true)),
+      listOf(GetPasswordOption(isAutoSelectAllowed = autoSelect)),
     )
 
     return try {

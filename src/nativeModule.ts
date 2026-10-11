@@ -8,7 +8,7 @@ export type NativeResult = {
 };
 
 export type CredentialManagerNativeModule = {
-  getPasswordCredential(): Promise<NativeResult>;
+  getPasswordCredential(autoSelect: boolean): Promise<NativeResult>;
   savePasswordCredential(id: string, password: string): Promise<NativeResult>;
 };
 

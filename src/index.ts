@@ -9,5 +9,6 @@ export { CredentialResultEnums } from "./types";
 export type {
   CredentialFailure,
   CredentialResult,
+  GetCredentialOptions,
   PasswordCredential,
 } from "./types";

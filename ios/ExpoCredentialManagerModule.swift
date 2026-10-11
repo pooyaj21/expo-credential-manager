@@ -19,7 +19,10 @@ public class ExpoCredentialManagerModule: Module {
   public func definition() -> ModuleDefinition {
     Name("ExpoCredentialManager")
 
-    AsyncFunction("getPasswordCredential") { (promise: Promise) in
+    // The leading Bool is Android's autoSelect. iOS has no equivalent —
+    // ASAuthorizationPasswordProvider always raises its own Face ID / Touch ID
+    // gated sheet — so it is accepted to keep one JS signature and ignored.
+    AsyncFunction("getPasswordCredential") { (_: Bool, promise: Promise) in
       let controller = PasswordRequestController { [weak self] result in
         self?.requestController = nil
         promise.resolve(result)

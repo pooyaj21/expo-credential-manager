@@ -8,6 +8,7 @@ import {
 import {
   CredentialResult,
   CredentialResultEnums,
+  GetCredentialOptions,
   PasswordCredential,
 } from "./types";
 
@@ -18,8 +19,14 @@ type UseCredentialManagerReturn = {
   loading: boolean;
   /** Outcome of the last completed request, including the normal ones. */
   lastResult: CredentialResult | null;
-  /** Opens the sheet; resolves `undefined` unless the user picked a credential. */
-  requestCredential: () => Promise<PasswordCredential | undefined>;
+  /**
+   * Opens the sheet; resolves `undefined` unless the user picked a credential.
+   * Pass `{ autoSelect: true }` to let Android skip the picker when exactly one
+   * credential matches.
+   */
+  requestCredential: (
+    options?: GetCredentialOptions,
+  ) => Promise<PasswordCredential | undefined>;
   /** Offers a credential to the system password manager after a successful sign-in. */
   saveCredential: (
     id: string,
@@ -38,6 +45,13 @@ type UseCredentialManagerReturn = {
  *   if (credential) login(credential.id, credential.password);
  * };
  * ```
+ *
+ * The account picker is confirmed on every call. To let Android return a lone
+ * stored credential with no sheet and no tap:
+ *
+ * ```tsx
+ * const credential = await requestCredential({ autoSelect: true });
+ * ```
  */
 export function useCredentialManager(): UseCredentialManagerReturn {
   const [loading, setLoading] = useState(false);
@@ -54,13 +68,13 @@ export function useCredentialManager(): UseCredentialManagerReturn {
     };
   }, []);
 
-  const requestCredential = useCallback(async () => {
+  const requestCredential = useCallback(async (options?: GetCredentialOptions) => {
     if (inFlight.current) return undefined;
     inFlight.current = true;
     if (isMounted.current) setLoading(true);
 
     try {
-      const result = await getPasswordCredential();
+      const result = await getPasswordCredential(options);
       if (isMounted.current) setLastResult(result);
       return isPasswordCredential(result) ? result : undefined;
     } finally {

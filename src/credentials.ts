@@ -2,6 +2,7 @@ import { nativeModule, toStatus } from "./nativeModule";
 import {
   CredentialResult,
   CredentialResultEnums,
+  GetCredentialOptions,
   PasswordCredential,
 } from "./types";
 
@@ -20,17 +21,22 @@ export function isCredentialManagerAvailable(): boolean {
 /**
  * Opens the system credential sheet and resolves with the chosen credential.
  *
- * Android: Credential Manager (`GetPasswordOption`, auto-selecting when exactly
- * one credential matches). iOS: `ASAuthorizationPasswordProvider`, gated on
- * Face ID / Touch ID by the OS.
+ * Android: Credential Manager (`GetPasswordOption`). The account picker is
+ * confirmed every time unless the caller passes `{ autoSelect: true }`. iOS:
+ * `ASAuthorizationPasswordProvider`, gated on Face ID / Touch ID by the OS,
+ * which ignores `autoSelect`.
  *
  * Never throws — every failure comes back as a status.
  */
-export async function getPasswordCredential(): Promise<CredentialResult> {
+export async function getPasswordCredential(
+  options?: GetCredentialOptions,
+): Promise<CredentialResult> {
   if (!nativeModule) return { status: CredentialResultEnums.UNAVAILABLE };
 
   try {
-    const result = await nativeModule.getPasswordCredential();
+    const result = await nativeModule.getPasswordCredential(
+      options?.autoSelect ?? false,
+    );
     const status = toStatus(result.status);
 
     if (

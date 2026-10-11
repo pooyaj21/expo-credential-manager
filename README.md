@@ -145,11 +145,33 @@ On Android, never set `keyboardType="visible-password"` for a show/hide toggle �
 
 | Export | Description |
 | --- | --- |
-| `useCredentialManager()` | React hook: `isAvailable`, `loading`, `lastResult`, `requestCredential()`, `saveCredential()` |
-| `getPasswordCredential()` | Opens the sheet → `Promise<CredentialResult>`. Never throws. |
+| `useCredentialManager()` | React hook: `isAvailable`, `loading`, `lastResult`, `requestCredential(options?)`, `saveCredential()` |
+| `getPasswordCredential(options?)` | Opens the sheet → `Promise<CredentialResult>`. Never throws. |
 | `savePasswordCredential(id, password)` | Offers the credential to the password manager → `Promise<CredentialResultEnums>` |
 | `isCredentialManagerAvailable()` | `true` when the native module is in this binary |
 | `isPasswordCredential(result)` | Type guard narrowing `CredentialResult` to its success member |
+
+### `GetCredentialOptions`
+
+```ts
+type GetCredentialOptions = {
+  /** Android only. @default false */
+  autoSelect?: boolean;
+};
+```
+
+`autoSelect` is the one knob on the sheet, and it is **off by default**:
+
+| `autoSelect` | Behaviour |
+| --- | --- |
+| `false` (default) | The account picker is always shown and always confirmed, even when only one credential matches. |
+| `true` | When exactly one credential matches, the OS returns it with **no sheet and no tap**. |
+
+`true` is the fastest sign-in there is, and the trade-off is explicit: whoever is holding the unlocked phone gets signed in, because nothing between the focus event and the credential asks a question. Pair it with a screen the user must still act on, or leave it off. iOS ignores the flag — `ASAuthorizationPasswordProvider` always raises its own Face ID / Touch ID gated sheet.
+
+```ts
+const credential = await requestCredential({ autoSelect: true });
+```
 
 ### `CredentialResult`
 
@@ -178,6 +200,7 @@ Only `ERROR` deserves a log. The other four non-success statuses are ordinary us
 | | Android | iOS |
 | --- | --- | --- |
 | Read a credential | Credential Manager sheet | Password AutoFill sheet (Face ID / Touch ID) |
+| `autoSelect` option | Honoured | Ignored — the OS always gates on biometrics |
 | Save a credential | `CreatePasswordRequest` — a real system prompt | **`unsupported`** |
 | Association file | `.well-known/assetlinks.json` | `.well-known/apple-app-site-association` |
 
@@ -185,11 +208,12 @@ iOS has no public API to write a password. `SecAddSharedWebCredential` is deprec
 
 ### Double-save protection
 
-The library remembers the last credential the OS handed it. Calling `savePasswordCredential` with that same pair returns `UNCHANGED` without touching the system, so a user who just signed in with one tap is not immediately asked to save a password the OS already holds.
+The library remembers the last credential the OS handed it. Calling `savePasswordCredential` with that same pair returns `UNCHANGED` without touching the system, so a user who just signed in from the sheet is not immediately asked to save a password the OS already holds.
 
 ## Gotchas
 
-- **Do not add `prepareGetCredential` or `setPreferImmediatelyAvailableCredentials`** as an "is anything saved?" pre-check. Both were tried on a real device: they silently suppressed the sheet entirely. The only smoothing applied is `GetPasswordOption(isAutoSelectAllowed = true)`, which skips the account picker when exactly one credential matches.
+- **Do not add `prepareGetCredential` or `setPreferImmediatelyAvailableCredentials`** as an "is anything saved?" pre-check. Both were tried on a real device: they silently suppressed the sheet entirely.
+- **`isAutoSelectAllowed` defaults to `false`** and is opt-in per call via `{ autoSelect: true }`. There is no way to force a biometric prompt on Android: Credential Manager has no "require auth" flag, and `autoSelect: true` means a lone credential comes back with no sheet and no tap. If the sign-in must be confirmed, leave the default.
 - **Credential Manager does not replace Digital Asset Links.** A password the user saved on your website in Chrome only reaches the sheet once the live `assetlinks.json` grants `get_login_creds`.
 - **Save after the backend says yes**, not on submit. Saving a rejected password poisons the password manager.
 - **R8**: `credentials-play-services-auth` emits a handful of "invalid stack map table" warnings against `play-services-auth`. The build succeeds and the classes are retained; they are warnings, not errors.

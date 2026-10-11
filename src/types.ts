@@ -35,3 +35,18 @@ export type CredentialFailure = {
 
 /** Narrow on `status === CredentialResultEnums.SUCCESS` to reach `id` / `password`. */
 export type CredentialResult = PasswordCredential | CredentialFailure;
+
+/** Options for `getPasswordCredential` / `requestCredential`. */
+export type GetCredentialOptions = {
+  /**
+   * Android only. `true` lets the system skip the account picker and return a
+   * stored credential with no sheet and no tap, when exactly one matches —
+   * fastest, but it means anyone holding the unlocked phone is signed in.
+   * `false` (the default) always shows the picker, so every sign-in is
+   * confirmed. iOS ignores this: `ASAuthorizationPasswordProvider` always
+   * raises its own Face ID / Touch ID gated sheet.
+   *
+   * @default false
+   */
+  autoSelect?: boolean;
+};
