@@ -5,3 +5,5 @@ lib/
 android/build/
 android/.cxx/
 ios/build/
+
+.idea
