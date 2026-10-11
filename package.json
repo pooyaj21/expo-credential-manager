@@ -1,0 +1,58 @@
+{
+  "name": "@pj21/expo-credential-manager",
+  "version": "1.0.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "description": "One-tap password sign-in for Expo / React Native. Opens the native Android Credential Manager sheet or the iOS Password AutoFill sheet and returns the saved credential.",
+  "main": "lib/commonjs/index.js",
+  "module": "lib/module/index.js",
+  "types": "lib/typescript/index.d.ts",
+  "react-native": "src/index.ts",
+  "source": "src/index.ts",
+  "files": [
+    "src",
+    "lib",
+    "android",
+    "ios",
+    "expo-module.config.json",
+    "app.plugin.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "clean": "rm -rf lib",
+    "build": "npm run clean && npm run build:cjs && npm run build:esm && npm run build:types",
+    "build:cjs": "tsc -p tsconfig.build.json --module commonjs --outDir lib/commonjs",
+    "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir lib/module",
+    "build:types": "tsc -p tsconfig.build.json --declaration --emitDeclarationOnly --outDir lib/typescript",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "expo",
+    "react-native",
+    "credential-manager",
+    "autofill",
+    "password",
+    "one-tap",
+    "passwords",
+    "authentication",
+    "login"
+  ],
+  "author": "Pooya Jalali",
+  "license": "MIT",
+  "peerDependencies": {
+    "expo": "*",
+    "react": "*",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.10",
+    "expo": "^55.0.19",
+    "react": "19.2.0",
+    "react-native": "0.83.10",
+    "typescript": "~5.9.2"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "moduleResolution": "node10",
+    "noEmit": false
+  },
+  "exclude": ["lib", "node_modules"]
+}
